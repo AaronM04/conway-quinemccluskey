@@ -72,14 +72,6 @@ fn info(n: usize, width: usize, care: bool) -> TermInfo {
 }
 
 fn main() {
-    /*
-    for n in 0..512 {
-        let value = decompose(n);
-        if value {
-            println!("{:?}", info(n, 9, true));
-        }
-    }
-    */
     let mut terminfos: Vec<TermInfo> = Vec::new();
     const WIDTH: usize = 6;
     for n in 0..(1<<WIDTH) {
