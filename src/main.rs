@@ -10,6 +10,7 @@ struct Implicant {
     dashes:     usize,
     care:       Option<bool>,       // Some(true/false) only used for 0-cubes
     ns:         Vec<usize>,
+    is_final:   bool,
 }
 
 impl fmt::Display for Implicant {
@@ -38,17 +39,18 @@ impl fmt::Display for Implicant {
             write!(&mut mt_expr, "m{}", self.ns[0]).unwrap();
         } else {
             mt_expr.push_str("m(");
-            for ref n in &self.ns {
+            for &n in self.ns.iter() {
                 let mut s_tmp = String::new();
                 write!(&mut s_tmp, "{},", n).unwrap();
                 mt_expr.push_str(&s_tmp);
             }
             mt_expr.push_str(")");
         }
-        write!(f, "Implicant( 1s:{} -s:{} {} {}{})",
+        write!(f, "Implicant( 1s:{} -s:{} {}{} {}{} )",
                 self.num_ones,
                 self.num_dashes,
                 s,
+                if self.is_final { "*" } else { " " },
                 mt_expr,
                 if self.care == Some(false) { " DONTCARE" } else { "" }
             )
@@ -77,7 +79,8 @@ impl Implicant {
             ones:       n,
             dashes:     0,
             care:       Some(care),
-            ns:         vec![n]
+            ns:         vec![n],
+            is_final:   false,
         }
     }
 
@@ -95,8 +98,8 @@ impl Implicant {
         }
 
         let mut combined_ns = self.ns.clone();
-        for ref other_n in &other.ns {      // There's got to be another way to do this
-            combined_ns.push(**other_n);
+        for &other_n in other.ns.iter() {
+            combined_ns.push(other_n);
         }
 
         Some(Implicant {
@@ -105,7 +108,8 @@ impl Implicant {
             ones:       self.ones,
             dashes:     self.dashes | ones_xor,
             care:       None,
-            ns:         combined_ns
+            ns:         combined_ns,
+            is_final:   false,
         })
     }
 }
@@ -150,18 +154,24 @@ fn main() {
     }
 
     println!("Size 2 implicants");
-    //XXX Keep a parallel array of count of all zerocubes that were combined, and
-    // then loop through zerocubes at end to save the "no further" ones.
+    let mut used_zerocubes = vec![0usize; zerocubes.len()];  // parallel to zerocubes, # times used
     let mut s2implicants: Vec<Implicant> = Vec::new();
     for i in 0..(zerocubes.len()-1) {
         let imp_i = &zerocubes[i];
         for j in (i+1)..(zerocubes.len()) {
             let imp_j = &zerocubes[j];
             if let Some(imp_new) = imp_i.combine(imp_j) {
-                //XXX increment comb count for imp_i and imp_j in parallel array
+                used_zerocubes[i] += 1;
+                used_zerocubes[j] += 1;
                 println!("{}", imp_new);
                 s2implicants.push(imp_new);
             }
+        }
+    }
+    for i in 0..zerocubes.len() {
+        if used_zerocubes[i] == 0 {
+            zerocubes[i].is_final = true;
+            println!("{}", zerocubes[i]);
         }
     }
 
