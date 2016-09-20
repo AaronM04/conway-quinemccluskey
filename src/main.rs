@@ -1,8 +1,10 @@
 use std::fmt;
 use std::fmt::Write;
+use std::collections::HashMap;
 
 const WIDTH: usize = 6;
 
+#[derive(Clone)]
 struct Implicant {
     num_ones:   usize,
     num_dashes: usize,
@@ -143,6 +145,61 @@ fn decompose2(n: usize) -> Output {
     }
 }
 
+fn calculate_prime_implicants(zerocubes: Vec<Implicant>) -> Vec<Implicant> {
+    let mut imp_hash = HashMap::new();      // maps size to vector of Implicants
+    imp_hash.insert(1, zerocubes.clone());
+    for shift in 1..WIDTH {
+        let prev_size     = 1 << (shift-1);
+        let mut prev_imps = imp_hash.get_mut(&prev_size).unwrap();
+        if prev_imps.len() == 0 {
+            break;
+        }
+
+        let size          = 1 << shift;
+        imp_hash.insert(size, Vec::<Implicant>::new());
+        let mut imps      = imp_hash.get_mut(&size).unwrap();
+
+        let mut used_prev_imps = vec![0usize; prev_imps.len()];  // parallel to prev_imps, # times used
+        let mut imps: Vec<Implicant> = Vec::new();
+        for i in 0..(prev_imps.len()-1) {
+            let imp_i = &prev_imps[i];
+            for j in (i+1)..(prev_imps.len()) {
+                let imp_j = &prev_imps[j];
+                if let Some(imp_new) = imp_i.combine(imp_j) {
+                    used_prev_imps[i] += 1;
+                    used_prev_imps[j] += 1;
+                    imps.push(imp_new);
+                }
+            }
+        }
+        for i in 0..prev_imps.len() {
+            if used_prev_imps[i] == 0 {
+                prev_imps[i].is_final = true;
+            }
+        }
+
+
+    }
+
+    // mark largest size as all final
+    for shift in (0..WIDTH).rev() {
+        if let Some(imps) = imp_hash.get(&(1<<shift)) {
+            for ref mut imp in imps.iter() {
+                imp.is_final = true;
+            }
+            break;
+        }
+    }
+
+    // 2) collect the final ones into the output vector
+    let mut result: Vec<Implicant> = Vec::new();
+    for shift in 0..WIDTH {
+
+    }
+    // XXX
+    result
+}
+
 fn main() {
     let mut zerocubes: Vec<Implicant> = Vec::new();
     for n in 0..(1<<WIDTH) {
@@ -153,30 +210,11 @@ fn main() {
         }
     }
 
-    println!("Size 2 implicants");
-    let mut used_zerocubes = vec![0usize; zerocubes.len()];  // parallel to zerocubes, # times used
-    let mut s2implicants: Vec<Implicant> = Vec::new();
-    for i in 0..(zerocubes.len()-1) {
-        let imp_i = &zerocubes[i];
-        for j in (i+1)..(zerocubes.len()) {
-            let imp_j = &zerocubes[j];
-            if let Some(imp_new) = imp_i.combine(imp_j) {
-                used_zerocubes[i] += 1;
-                used_zerocubes[j] += 1;
-                println!("{}", imp_new);
-                s2implicants.push(imp_new);
-            }
-        }
-    }
-    for i in 0..zerocubes.len() {
-        if used_zerocubes[i] == 0 {
-            zerocubes[i].is_final = true;
-            println!("{}", zerocubes[i]);
-        }
-    }
+    let prime_imps = calculate_prime_implicants(zerocubes);
 
-    println!("Size 4 implicants");
-    //XXX
+    for imp in prime_imps.iter() {
+        println!("{}", imp);
+    }
 }
 
 
