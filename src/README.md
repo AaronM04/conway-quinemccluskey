@@ -12,6 +12,9 @@ neighbors, and then perform Quine-McCluskey optimization to find logic to get
 the next cell state.
 
 Further reading:
+
 https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+
 https://en.wikipedia.org/wiki/Quine%E2%80%93McCluskey_algorithm
+
 https://en.wikipedia.org/wiki/Adder_%28electronics%29#Full_adder
