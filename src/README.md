@@ -6,10 +6,10 @@ bits) to find the next generation. The naive approach would be to use full adder
 circuits to add up all the neighbors and then add logic to apply the life rules
 to the center cell and the calculated neighbor sum.
 
-I'm hoping I can reduce the number of operations by computing a 2-bit-wide sum
+I decided to try reducing the number of operations by computing a 2-bit-wide sum
 of three of the neighbors and then a 3-bit-wide sum of the remaining five
 neighbors, and then perform Quine-McCluskey optimization to find logic to get
-the next cell state.
+the next cell state. I added the working function as `next_gen(n: usize) -> Output`.
 
 Further reading:
 
