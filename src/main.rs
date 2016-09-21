@@ -1,6 +1,5 @@
 use std::fmt;
 use std::fmt::Write;
-use std::collections::HashMap;
 
 const WIDTH: usize = 6;
 
@@ -14,6 +13,15 @@ struct Implicant {
     ns:         Vec<usize>,
     used:       bool,
 }
+
+// https://doc.rust-lang.org/stable/std/cmp/trait.Eq.html
+impl PartialEq for Implicant {
+    fn eq(&self, other: &Implicant) -> bool {
+        self.ones == other.ones && self.dashes == other.dashes
+    }
+}
+
+impl Eq for Implicant {}        // I dunno, the docs told me to do this
 
 impl fmt::Display for Implicant {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -103,6 +111,7 @@ impl Implicant {
         for &other_n in other.ns.iter() {
             combined_ns.push(other_n);
         }
+        combined_ns.sort();
 
         Some(Implicant {
             num_ones:   self.num_ones,
@@ -146,58 +155,44 @@ fn decompose2(n: usize) -> Output {
 }
 
 fn calculate_prime_implicants(zerocubes: Vec<Implicant>) -> Vec<Implicant> {
-    //XXX delete the HashMap and do something simpler
-    let mut imp_hash = HashMap::new();      // maps size to vector of Implicants
-    imp_hash.insert(1, zerocubes.clone());
-    for shift in 1..WIDTH {
-        let prev_size     = 1 << (shift-1);
-        let mut prev_imps = imp_hash.get_mut(&prev_size).unwrap();
-        if prev_imps.len() == 0 {
-            break;
-        }
-
-        let size          = 1 << shift;
-        imp_hash.insert(size, Vec::<Implicant>::new());
-        let mut imps      = imp_hash.get_mut(&size).unwrap();
-
-        let mut used_prev_imps = vec![0usize; prev_imps.len()];  // parallel to prev_imps, # times used
-        let mut imps: Vec<Implicant> = Vec::new();
-        for i in 0..(prev_imps.len()-1) {
-            let imp_i = &prev_imps[i];
-            for j in (i+1)..(prev_imps.len()) {
-                let imp_j = &prev_imps[j];
-                if let Some(imp_new) = imp_i.combine(imp_j) {
-                    used_prev_imps[i] += 1;
-                    used_prev_imps[j] += 1;
-                    imps.push(imp_new);
+    let mut imps = zerocubes.clone();
+    let mut index = 0;
+    let mut next_index = imps.len();
+    for _ in 1..WIDTH {
+        for i in index..(next_index-1) {
+            for j in (i+1)..next_index {
+                if let Some(imp_new) = imps[i].combine(&imps[j]) {
+                    imps[i].used = true;
+                    imps[j].used = true;
+                    // make sure this isn't a dup
+                    let mut dup = false;
+                    for k in next_index..imps.len() {
+                        if imp_new == imps[k] {
+                            dup = true;
+                            break;
+                        }
+                        debug_assert!(imp_new.ones != imps[k].ones || imp_new.dashes != imps[k].dashes);
+                    }
+                    if !dup {
+                        imps.push(imp_new);
+                    }
                 }
             }
         }
-        for i in 0..prev_imps.len() {
-            if used_prev_imps[i] == 0 {
-                prev_imps[i].is_final = true;
-            }
+        if next_index == imps.len() {
+            break;   // no new Implicants this round
         }
-
-
+        index = next_index;
+        next_index = imps.len();
     }
 
-    // mark largest size as all final
-    for shift in (0..WIDTH).rev() {
-        if let Some(imps) = imp_hash.get(&(1<<shift)) {
-            for ref mut imp in imps.iter() {
-                imp.is_final = true;
-            }
-            break;
+    // collect the final ones into the output vector, except used ones
+    let mut result = Vec::<Implicant>::new();
+    for imp in imps.iter() {
+        if !imp.used {
+            result.push(imp.clone());
         }
     }
-
-    // 2) collect the final ones into the output vector
-    let mut result: Vec<Implicant> = Vec::new();
-    for shift in 0..WIDTH {
-
-    }
-    // XXX
     result
 }
 
@@ -211,8 +206,14 @@ fn main() {
         }
     }
 
+    println!("\nZero cubes:");
+    for imp in zerocubes.iter() {
+        println!("{}", imp);
+    }
+
     let prime_imps = calculate_prime_implicants(zerocubes);
 
+    println!("\nPrime Implicants:");
     for imp in prime_imps.iter() {
         println!("{}", imp);
     }

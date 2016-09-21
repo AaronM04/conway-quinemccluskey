@@ -1,0 +1,46 @@
+
+Zero cubes:
+Implicant( 1s:2 -s:0 000101* m5 )
+Implicant( 1s:2 -s:0 000110* m6 )
+Implicant( 1s:3 -s:0 000111* m7 )
+Implicant( 1s:2 -s:0 001100* m12 DONTCARE )
+Implicant( 1s:3 -s:0 001101* m13 DONTCARE )
+Implicant( 1s:3 -s:0 001110* m14 DONTCARE )
+Implicant( 1s:4 -s:0 001111* m15 DONTCARE )
+Implicant( 1s:3 -s:0 010011* m19 )
+Implicant( 1s:2 -s:0 010100* m20 )
+Implicant( 1s:3 -s:0 010101* m21 )
+Implicant( 1s:3 -s:0 011100* m28 DONTCARE )
+Implicant( 1s:4 -s:0 011101* m29 DONTCARE )
+Implicant( 1s:4 -s:0 011110* m30 DONTCARE )
+Implicant( 1s:5 -s:0 011111* m31 DONTCARE )
+Implicant( 1s:2 -s:0 100001* m33 )
+Implicant( 1s:2 -s:0 100010* m34 )
+Implicant( 1s:3 -s:0 100011* m35 )
+Implicant( 1s:3 -s:0 101100* m44 DONTCARE )
+Implicant( 1s:4 -s:0 101101* m45 DONTCARE )
+Implicant( 1s:4 -s:0 101110* m46 DONTCARE )
+Implicant( 1s:5 -s:0 101111* m47 DONTCARE )
+Implicant( 1s:2 -s:0 110000* m48 )
+Implicant( 1s:3 -s:0 110001* m49 )
+Implicant( 1s:4 -s:0 111100* m60 DONTCARE )
+Implicant( 1s:5 -s:0 111101* m61 DONTCARE )
+Implicant( 1s:5 -s:0 111110* m62 DONTCARE )
+Implicant( 1s:6 -s:0 111111* m63 DONTCARE )
+
+Prime Implicants:
+Using:
+    5 6 7 19 20 21 33 34 35 48 49
+-->       x                       Implicant( 1s:3 -s:0 010011* m19 )
+-->                x     x        Implicant( 1s:2 -s:1 1000-1* m(33,35,) )
+-->                   x  x        Implicant( 1s:2 -s:1 10001-* m(34,35,) )
+-->                         x  x  Implicant( 1s:2 -s:1 11000-* m(48,49,) )
+--> x           x                 Implicant( 1s:2 -s:2 0--101* m(5,13,21,29,) )
+-->   x x                         Implicant( 1s:2 -s:2 00-11-* m(6,7,14,15,) )
+-->          x  x                 Implicant( 1s:2 -s:2 01-10-* m(20,21,28,29,) )
+
+
+Unused:
+    5 6 7 19 20 21 33 34 35 48 49
+                   x           x  Implicant( 1s:2 -s:1 1-0001* m(33,49,) )
+    x   x                         Implicant( 1s:2 -s:2 00-1-1* m(5,7,13,15,) )
