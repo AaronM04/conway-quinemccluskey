@@ -125,7 +125,7 @@ impl Implicant {
     }
 }
 
-#[derive(Eq,PartialEq)]
+#[derive(Eq,PartialEq,Debug)]
 enum Output {
     Alive,
     Dead,
@@ -196,6 +196,34 @@ fn calculate_prime_implicants(zerocubes: Vec<Implicant>) -> Vec<Implicant> {
     result
 }
 
+// From output of part 1 -- this is the sauce ;-)
+fn next_gen(n: usize) -> Output {
+    let y1 = (n >> 5) & 1;
+    let y2 = (n >> 4) & 1;
+    let y3 = (n >> 3) & 1;
+    let y4 = (n >> 2) & 1;
+    let y5 = (n >> 1) & 1;
+    let y6 =  n       & 1;
+    /* Equivalent to this:
+    let term1 = !y1 &  y2 & !y3 & !y4 &  y5 & y6;
+    let term2 =  y1 & !y2 & !y3 & !y4       & y6;
+    let term3 =  y1 & !y2 & !y3 & !y4 &  y5;
+    let term4 =  y1 &  y2 & !y3 & !y4 & !y5;
+    let term5 = !y1             &  y4 & !y5 & y6;
+    let term6 = !y1 & !y2       &  y4 &  y5;
+    let term7 = !y1 &  y2       &  y4 & !y5;
+    let slow_result = term1 | term2 | term3 | term4 | term5 | term6 | term7;
+    */
+    let int1 = !y3 & !y4;
+    let result = !y1&y6&(y2&int1&y5 | y4&!y5) | y1&int1&(!y2&(y5 | y6) | y2&!y5) | !y1&y4&(y2^y5);
+    //assert!(result == slow_result);
+    if result == 1 {
+        Output::Alive
+    } else {
+        Output::Dead
+    }
+}
+
 fn main() {
     let mut zerocubes: Vec<Implicant> = Vec::new();
     for n in 0..(1<<WIDTH) {
@@ -216,6 +244,27 @@ fn main() {
     println!("\nPrime Implicants:");
     for imp in prime_imps.iter() {
         println!("{}", imp);
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // Part 2 : I wrote the following using the output of the above,
+    //     after making prime implicant chart (see the .txt file).
+    //////////////////////////////////////////////////////////////////
+
+    println!("\n\nPart 2: test the function");
+    let mut failures = 0;
+    for n in 0..1<<WIDTH {
+        let value = decompose2(n);
+        if value == Output::DontCare {
+            continue;
+        }
+        if next_gen(n) != value {
+            println!("FAIL n is {:06b} - expected {:?}", n, value);
+            failures += 1;
+        }
+    }
+    if failures == 0 {
+        println!("PASS");
     }
 }
 
