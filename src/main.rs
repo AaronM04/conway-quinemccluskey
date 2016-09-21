@@ -12,7 +12,7 @@ struct Implicant {
     dashes:     usize,
     care:       Option<bool>,       // Some(true/false) only used for 0-cubes
     ns:         Vec<usize>,
-    is_final:   bool,
+    used:       bool,
 }
 
 impl fmt::Display for Implicant {
@@ -52,7 +52,7 @@ impl fmt::Display for Implicant {
                 self.num_ones,
                 self.num_dashes,
                 s,
-                if self.is_final { "*" } else { " " },
+                if !self.used { "*" } else { " " },     // only meaningful at the end
                 mt_expr,
                 if self.care == Some(false) { " DONTCARE" } else { "" }
             )
@@ -82,7 +82,7 @@ impl Implicant {
             dashes:     0,
             care:       Some(care),
             ns:         vec![n],
-            is_final:   false,
+            used:       false,
         }
     }
 
@@ -111,7 +111,7 @@ impl Implicant {
             dashes:     self.dashes | ones_xor,
             care:       None,
             ns:         combined_ns,
-            is_final:   false,
+            used:       false,
         })
     }
 }
@@ -146,6 +146,7 @@ fn decompose2(n: usize) -> Output {
 }
 
 fn calculate_prime_implicants(zerocubes: Vec<Implicant>) -> Vec<Implicant> {
+    //XXX delete the HashMap and do something simpler
     let mut imp_hash = HashMap::new();      // maps size to vector of Implicants
     imp_hash.insert(1, zerocubes.clone());
     for shift in 1..WIDTH {
