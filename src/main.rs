@@ -132,6 +132,29 @@ enum Output {
     DontCare
 }
 
+
+// "full-width" decomposition - 9 bits - top row, middle row (incl. center cell), bottom row
+fn decompose(n: usize) -> Output {
+    let mut neighbors = 0;
+    let mut center = false;
+    for row in 0..3 {
+        for col in 0..3 {
+            let value: usize = ((n >> (3*(2-row))) >> (2-col)) & 1;
+            if col == 1 && row == 1 {
+                center = value==1;
+            } else if value == 1 {
+                neighbors += 1;
+            }
+        }
+    }
+    if neighbors == 3 || (center && neighbors == 2) {
+        Output::Alive
+    } else {
+        Output::Dead
+    }
+}
+
+
 // narrower decomposition - 6 bits:
 //          543210
 //          yy      - sum of top row
@@ -224,6 +247,50 @@ fn next_gen(n: usize) -> Output {
     }
 }
 
+// n is 3x3: highest 3 bits (8 thru 6) are row 1, next highest (5 thru 3) are row 2, etc.
+//XXX compare against classic(tm) decompose function
+fn next_gen_9bit(n: usize) -> Output {
+    let a  = (n >> 8) & 1;
+    let b  = (n >> 7) & 1;
+    let c  = (n >> 6) & 1;
+    let d  = (n >> 5) & 1;
+    let y6 = (n >> 4) & 1;  // center cell
+    let e  = (n >> 3) & 1;
+    let f  = (n >> 2) & 1;
+    let g  = (n >> 1) & 1;
+    let h  =  n       & 1;
+
+    // full adder #1
+    let b_xor_c = b^c;
+    let y1 = (a & b_xor_c) | (b & c);
+    let y2 = a ^ b_xor_c;
+
+    // full adder #2
+    let e_xor_f = e^f;
+    let c2 = (d & e_xor_f) | (e & f);
+    let s2 = d ^ e_xor_f;
+
+    // half adder #1
+    let c3 = g & h;
+    let s3 = g ^ h;
+
+    // half adder #2
+    let c4 = s2 & s3;
+    let y5 = s2 ^ s3;
+
+    // full adder #3
+    let c2_xor_c3 = c2 ^ c3;
+    let y3 = (c4 & c2_xor_c3) | (c2 & c3);
+    let y4 = c4 ^ c2_xor_c3;
+
+    next_gen((y1 << 5) |
+             (y2 << 4) |
+             (y3 << 3) |
+             (y4 << 2) |
+             (y5 << 1) |
+              y6)
+}
+
 fn main() {
     let mut zerocubes: Vec<Implicant> = Vec::new();
     for n in 0..(1<<WIDTH) {
@@ -251,7 +318,7 @@ fn main() {
     //     after making prime implicant chart (see the .txt file).
     //////////////////////////////////////////////////////////////////
 
-    println!("\n\nPart 2: test the function");
+    println!("\n\nPart 2: test the next_gen function against decompose2 (6-bit)");
     let mut failures = 0;
     for n in 0..1<<WIDTH {
         let value = decompose2(n);
@@ -266,26 +333,25 @@ fn main() {
     if failures == 0 {
         println!("PASS");
     }
-}
 
+    //////////////////////////////////////////////////////////////////
+    // Part 3 : I wrote next_gen_9bit later, which produces the 6-bit input
+    //     for next_gen.
+    //////////////////////////////////////////////////////////////////
 
-
-
-// "full-width" decomposition - 9 bits - top row, middle row (incl. center cell), bottom row
-/*
-fn decompose(n: usize) -> bool {
-    let mut neighbors = 0;
-    let mut center = false;
-    for row in 0..3 {
-        for col in 0..3 {
-            let value: usize = ((n >> (3*(2-row))) >> (2-col)) & 1;
-            if col == 1 && row == 1 {
-                center = value==1;
-            } else if value == 1 {
-                neighbors += 1;
-            }
+    println!("\n\nPart 3: test the next_gen_9bit function against decompose (9-bit)");
+    let mut failures3 = 0;
+    for n in 0..1<<9 {
+        let value = decompose(n);
+        if value == Output::DontCare { // can't occur with the 9-bit decomposition
+            continue;
+        }
+        if next_gen_9bit(n) != value {
+            println!("FAIL n is {:09b} - expected {:?}", n, value);
+            failures3 += 1;
         }
     }
-    neighbors == 3 || (center && neighbors == 2)
+    if failures3 == 0 {
+        println!("PASS");
+    }
 }
-*/
