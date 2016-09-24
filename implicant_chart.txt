@@ -46,4 +46,16 @@ Unused:
     x   x                         Implicant( 1s:2 -s:2 00-1-1* m(5,7,13,15,) )
 
 
-!y1&y6&(y2&!y3&!y4&y5 | y4&!y5) | y1&!y3&!y4&(!y2&(y5 | y6) | y2&!y5) | !y1&y4&(y2^y5)
+int1 = !y3&!y4
+!y1&y6&(y2&int1&y5 | y4&!y5) | y1&int1&(!y2&(y5 | y6) | y2&!y5) | !y1&y4&(y2^y5)
+
+
+
+EQUIVALENT:
+let term1 = !y1 &  y2 & !y3 & !y4 &  y5 & y6;
+let term2 =  y1 & !y2 & !y3 & !y4       & y6;
+let term3 =  y1 & !y2 & !y3 & !y4 &  y5;
+let term4 =  y1 &  y2 & !y3 & !y4 & !y5;
+let term5 = !y1             &  y4 & !y5 & y6;
+let term6 = !y1 & !y2       &  y4 &  y5;
+let term7 = !y1 &  y2       &  y4 & !y5;
